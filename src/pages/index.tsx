@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import Image from 'next/image';
 import { GetStaticProps } from 'next';
 import { api } from '../services/api';
@@ -7,6 +7,7 @@ import { ptBR } from 'date-fns/locale';
 import { convertDurationToTimeString } from '../utils/convertDurationToTimeString';
 import styles from './home.module.scss';
 import Link from 'next/link';
+import { PlayerContext } from '../contexts/PlayerContext';
 
 type HomeProps = {
   latestEpisodes: Episode[];
@@ -23,7 +24,9 @@ type Episode = {
   url: string;
 }
 
-export default function Home({latestEpisodes, allEpisodes}: HomeProps) {
+export default function Home({ latestEpisodes, allEpisodes }: HomeProps) {
+  const { play } = useContext(PlayerContext);
+
   return (
     <div className={styles.homepage}>
       <section className={styles.latestEpisodes}>
@@ -49,7 +52,7 @@ export default function Home({latestEpisodes, allEpisodes}: HomeProps) {
                   <span>{episode.durationAsString}</span>
                 </div>
 
-                <button type='button'>
+                <button type='button' onClick={() => play(episode)}>
                   <img src="/play-green.svg" alt="Reproduzir episódio"/>
                 </button>
               </li>
@@ -75,7 +78,7 @@ export default function Home({latestEpisodes, allEpisodes}: HomeProps) {
           {allEpisodes.map(episode => {
             return (
               <tr key={episode.id}>
-                <td style={{width: 72}}>
+                <td style={{ width: 72 }}>
                   <Image
                     width={120}
                     height={120}
@@ -90,7 +93,7 @@ export default function Home({latestEpisodes, allEpisodes}: HomeProps) {
                   </Link>
                 </td>
                 <td>{episode.members}</td>
-                <td style={{width: 100}}>{episode.publishedAt}</td>
+                <td style={{ width: 100 }}>{episode.publishedAt}</td>
                 <td>{episode.durationAsString}</td>
                 <td>
                   <button type='button'>
@@ -108,7 +111,7 @@ export default function Home({latestEpisodes, allEpisodes}: HomeProps) {
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  const {data} = await api('episodes', {
+  const { data } = await api('episodes', {
     params: {
       _limit: '12',
       _sort: 'published_at',
@@ -121,7 +124,7 @@ export const getStaticProps: GetStaticProps = async () => {
       title: episode.title,
       thumbnail: episode.thumbnail,
       members: episode.members,
-      publishedAt: format(parseISO(episode.published_at), 'd MMM yy', {locale: ptBR}),
+      publishedAt: format(parseISO(episode.published_at), 'd MMM yy', { locale: ptBR }),
       duration: Number(episode.file.duration),
       durationAsString: convertDurationToTimeString(Number(episode.file.duration)),
       url: episode.file.url
