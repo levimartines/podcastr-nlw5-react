@@ -7,6 +7,8 @@ import { ptBR } from 'date-fns/locale';
 import { convertDurationToTimeString } from '../../utils/convertDurationToTimeString';
 import styles from './episode.module.scss';
 import Link from 'next/link';
+import { usePlayer } from '../../contexts/PlayerContext';
+import Head from 'next/head';
 
 type EpisodeProps = {
   episode: Episode;
@@ -25,9 +27,15 @@ type Episode = {
 }
 
 export default function Episode({ episode }: EpisodeProps) {
+  const {
+    play
+  } = usePlayer();
 
   return (
     <div className={styles.episode}>
+      <Head>
+        <title>{episode.title} | Podcastr</title>
+      </Head>
       <div className={styles.thumbnailContainer}>
 
         <Link href={'/'}>
@@ -44,7 +52,7 @@ export default function Episode({ episode }: EpisodeProps) {
           objectFit='cover'
         />
 
-        <button type='button'>
+        <button type='button' onClick={() => play(episode)}>
           <img src="/play.svg" alt="Reproduzir episódio"/>
         </button>
       </div>
@@ -65,7 +73,7 @@ export default function Episode({ episode }: EpisodeProps) {
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const {data} = await api('episodes', {
+  const { data } = await api('episodes', {
     params: {
       _limit: '2',
       _sort: 'published_at',
@@ -75,8 +83,8 @@ export const getStaticPaths: GetStaticPaths = async () => {
   const paths = data.map(episode => {
     return {
       params: { slug: episode.id }
-    }
-  })
+    };
+  });
   return {
     paths,
     fallback: 'blocking'
